@@ -108,7 +108,7 @@ class AuthRepository @Inject constructor(
         return Uri.parse(OAuthConfig.AUTHORIZATION_URL).buildUpon()
             .appendQueryParameter("response_type", "code")
             .appendQueryParameter("client_id", OAuthConfig.clientId)
-            .appendQueryParameter("redirect_uri", OAuthConfig.REDIRECT_URI)
+            .appendQueryParameter("redirect_uri", OAuthConfig.redirectUri)
             .appendQueryParameter("scope", scopeWithOffline)
             .appendQueryParameter("state", state)
             .appendQueryParameter("code_challenge", challenge)
@@ -151,7 +151,7 @@ class AuthRepository @Inject constructor(
                 "grant_type" to "authorization_code",
                 "client_id" to OAuthConfig.clientId,
                 "code" to code,
-                "redirect_uri" to OAuthConfig.REDIRECT_URI,
+                "redirect_uri" to OAuthConfig.redirectUri,
                 "code_verifier" to verifier,
             ),
         ).toStoredToken(previousScope = "", previousRefresh = null)

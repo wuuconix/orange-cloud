@@ -1,0 +1,57 @@
+name: Build OSS Android APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      OAUTH_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
+      OAUTH_REDIRECT_URI: ${{ secrets.OAUTH_REDIRECT_URI }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android API 36
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Validate OAuth configuration
+        shell: bash
+        run: |
+          test -n "$OAUTH_CLIENT_ID" || { echo "Missing OAUTH_CLIENT_ID secret"; exit 1; }
+          test -n "$OAUTH_REDIRECT_URI" || { echo "Missing OAUTH_REDIRECT_URI secret"; exit 1; }
+          case "$OAUTH_REDIRECT_URI" in
+            https://*) ;;
+            *) echo "OAUTH_REDIRECT_URI must use HTTPS"; exit 1 ;;
+          esac
+
+      - name: Build installable OSS APK
+        working-directory: apps/android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon :app:assembleOssDebug \
+            -POAUTH_CLIENT_ID="$OAUTH_CLIENT_ID" \
+            -POAUTH_REDIRECT_URI="$OAUTH_REDIRECT_URI"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: orange-cloud-oss-debug-apk
+          path: apps/android/app/build/outputs/apk/oss/debug/app-oss-debug.apk
+          if-no-files-found: error
+          retention-days: 14

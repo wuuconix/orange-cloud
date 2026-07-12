@@ -22,6 +22,11 @@ fun oauthClientId(default: String): String =
         ?: providers.gradleProperty("OAUTH_CLIENT_ID").orNull
         ?: default
 
+fun oauthRedirectUri(default: String): String =
+    localProps.getProperty("OAUTH_REDIRECT_URI")
+        ?: providers.gradleProperty("OAUTH_REDIRECT_URI").orNull
+        ?: default
+
 // FCM（推送）配置：官方 play/direct 构建从 local.properties / -P 注入；缺省空串 = 推送不初始化（优雅降级）。
 fun buildProp(key: String, default: String = ""): String =
     localProps.getProperty(key) ?: providers.gradleProperty(key).orNull ?: default
@@ -51,6 +56,11 @@ android {
         // OAuth 回调（Web 后端 302 跳回的自定义 scheme）
         manifestPlaceholders["oauthScheme"] = "orangecloud"
         manifestPlaceholders["oauthHost"] = "oauth"
+        buildConfigField(
+            "String",
+            "OAUTH_REDIRECT_URI",
+            "\"${oauthRedirectUri("https://o-c.do/oauth/callback")}\"",
+        )
 
         // FCM（推送）：4 项来自 Firebase 项目（Web/Android 应用）。空串 = 推送不初始化。
         buildConfigField("String", "FCM_PROJECT_ID", "\"${buildProp("FCM_PROJECT_ID")}\"")

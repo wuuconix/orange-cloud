@@ -47,14 +47,28 @@ cd apps/android
 
 ## OAuth Client 注入
 
-`OAUTH_CLIENT_ID` 经 Gradle 注入到 `BuildConfig`：
+`OAUTH_CLIENT_ID` 和 `OAUTH_REDIRECT_URI` 经 Gradle 注入到 `BuildConfig`：
 
 - `play` 风味内置官方 Client ID——OAuth PKCE 下它是公开标识符而非机密，与 iOS `OAuthConfig.swift` 同值。
 - `oss` 风味默认空串。自编译者须在 `apps/android/local.properties` 填入自建的 Client ID：
   ```properties
   OAUTH_CLIENT_ID=你自建的_client_id
+  OAUTH_REDIRECT_URI=https://你的域名/oauth/callback
   ```
   并部署自己的回调中转——官方 Client 与 `o-c.do` 中转不向第三方构建开放，详见根目录 [`CONTRIBUTING.md`](../../CONTRIBUTING.md)。
+
+也可用 Gradle 项目属性（`-POAUTH_CLIENT_ID=... -POAUTH_REDIRECT_URI=...`）注入，供 CI 使用。
+
+## GitHub Actions 构建
+
+仓库的 `Build OSS Android APK` 工作流可在 GitHub 的 **Actions** 页面手动运行，不需要本地 Android 环境。先在 fork 的 **Settings → Secrets and variables → Actions** 添加：
+
+| Secret | 值 |
+|---|---|
+| `OAUTH_CLIENT_ID` | 你创建的 Cloudflare OAuth Client ID |
+| `OAUTH_REDIRECT_URI` | 已在该 Client 登记的完整 HTTPS 回调地址，例如 `https://example.com/oauth/callback` |
+
+运行完成后，从该次 workflow run 的 Artifacts 下载 `orange-cloud-oss-debug-apk`。其中的 APK 使用 debug key 签名，适合个人设备侧载；不要将它作为正式发布包分发。
 
 ## 架构
 
